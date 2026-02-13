@@ -1,0 +1,52 @@
+{
+  "name": "protomind-sar-dashboard",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint src --ext .ts,.tsx --max-warnings=0",
+    "backend:dev": "ts-node-dev --project backend/tsconfig.json --respawn backend/src/server.ts",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev --name init",
+    "seed": "ts-node-dev --project backend/tsconfig.json backend/src/scripts/seed.ts",
+    "llm:ingest": "ts-node-dev --project backend/tsconfig.json backend/src/llm/ingest.ts"
+  },
+  "dependencies": {
+    "clsx": "^2.1.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.21.3",
+    "@prisma/client": "^5.18.0",
+    "express": "^4.19.2",
+    "zod": "^3.23.8",
+    "dotenv": "^16.4.5",
+    "cors": "^2.8.5",
+    "@radix-ui/react-select": "^2.0.0",
+    "lucide-react": "^0.471.0",
+    "@langchain/core": "^1.1.22",
+    "@langchain/openai": "^1.2.7",
+    "@langchain/community": "^1.1.7",
+    "openai": "^4.73.0",
+    "chromadb": "^3.3.0",
+    "@xenova/transformers": "^2.17.2"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.37",
+    "@types/react-dom": "^18.2.15",
+    "@typescript-eslint/eslint-plugin": "^6.16.0",
+    "@typescript-eslint/parser": "^6.16.0",
+    "@vitejs/plugin-react-swc": "^3.5.0",
+    "autoprefixer": "^10.4.16",
+    "eslint": "^8.56.0",
+    "postcss": "^8.4.32",
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5.3.3",
+    "vite": "^5.0.8",
+    "prisma": "^5.18.0",
+    "ts-node-dev": "^2.0.0",
+    "@types/express": "^4.17.21",
+    "@types/cors": "^2.8.17"
+  }
+}
