@@ -23,7 +23,7 @@ export const Topbar: React.FC = () => {
           <span className="font-medium text-[#1e3a5f]">Alex Rivera</span>
           <span className="text-slate-500 text-[13px]">Senior Compliance Analyst</span>
         </div>
-        <div className="h-10 w-10 rounded-full bg-emerald-500 text-white flex items-center justify-center text-sm font-semibold shadow-md">
+        <div className="h-10 w-10 rounded-full bg-[#1e3a5f] text-white flex items-center justify-center text-sm font-medium">
           AR
         </div>
       </div>

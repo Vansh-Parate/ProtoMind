@@ -8,7 +8,7 @@ export const Table: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 );
 
 export const THead: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <thead className="bg-gradient-to-b from-slate-50 to-slate-100 border-b-2 border-slate-300">
+  <thead className="bg-slate-50 border-b border-slate-200">
     {children}
   </thead>
 );
@@ -25,7 +25,7 @@ export const TR: React.FC<{
   <tr
     onClick={onClick}
     className={clsx(
-      'cursor-pointer hover:bg-[linear-gradient(to_right,#f8fafc,#ffffff)] hover:border-l-4 hover:border-l-blue-600 hover:shadow-[inset_0_0_0_1px_#e2e8f0] even:bg-slate-50 table-row transition-all',
+      'cursor-pointer hover:bg-slate-50/80 hover:border-l-[3px] hover:border-l-[#1e3a5f] even:bg-slate-50/50 table-row transition-colors',
       className
     )}
   >

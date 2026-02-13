@@ -5,7 +5,7 @@ const navLinkBase =
   'flex items-center gap-2 px-6 py-3 text-sm font-medium text-slate-100 hover:bg-white/10 rounded-lg transition-colors';
 
 const activeClass =
-  'bg-blue-600 text-white shadow-[0_0_0_1px_rgba(37,99,235,0.6)]';
+  'bg-[#1e3a5f] text-white';
 
 export const Sidebar: React.FC = () => {
   return (

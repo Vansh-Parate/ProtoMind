@@ -3,20 +3,27 @@ import type { RiskLevel } from '../../types';
 import { clsx } from 'clsx';
 
 export const RiskBadge: React.FC<{ level: RiskLevel }> = ({ level }) => {
-  const label = level === 'HIGH' ? 'HIGH RISK' : level === 'MEDIUM' ? 'MEDIUM' : 'LOW';
+  const label = level === 'HIGH' ? 'High' : level === 'MEDIUM' ? 'Medium' : 'Low';
 
-  const classes = clsx(
-    'inline-flex items-center px-4 py-2 rounded-lg text-[13px] font-bold tracking-[0.05em] uppercase',
+  const dotClass = clsx('shrink-0 h-2 w-2 rounded-full', {
+    'bg-emerald-600': level === 'LOW',
+    'bg-amber-600': level === 'MEDIUM',
+    'bg-rose-600': level === 'HIGH'
+  });
+
+  const wrapperClass = clsx(
+    'inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-[13px] font-medium border border-slate-200/80 bg-white',
     {
-      'bg-[linear-gradient(135deg,#fee2e2_0%,#fecaca_100%)] text-red-800 border-2 border-red-500 border-l-[6px] shadow-[0_2px_4px_rgba(239,68,68,0.15)]':
-        level === 'HIGH',
-      'bg-[linear-gradient(135deg,#fef3c7_0%,#fde68a_100%)] text-amber-800 border-2 border-amber-500 border-l-[6px] shadow-[0_2px_4px_rgba(245,158,11,0.15)]':
-        level === 'MEDIUM',
-      'bg-[linear-gradient(135deg,#f0f9ff_0%,#e0f2fe_100%)] text-sky-900 border-2 border-sky-400 border-l-[6px] shadow-[0_2px_4px_rgba(14,165,233,0.15)]':
-        level === 'LOW'
+      'text-slate-700 border-l-[3px] border-l-emerald-600': level === 'LOW',
+      'text-slate-700 border-l-[3px] border-l-amber-600': level === 'MEDIUM',
+      'text-slate-700 border-l-[3px] border-l-rose-600': level === 'HIGH'
     }
   );
 
-  return <span className={classes}>{label}</span>;
+  return (
+    <span className={wrapperClass}>
+      <span className={dotClass} aria-hidden />
+      <span>{label}</span>
+    </span>
+  );
 };
-
