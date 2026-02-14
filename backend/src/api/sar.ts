@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { prisma } from '../core/prisma';
+import { invalidateCase, invalidateCasesList } from '../core/cache';
 import { LangChainLLMProvider, SarGenerationUnavailableError } from '../llm/provider';
 import { generateSarForCase, updateSarEdits, approveSar, rejectSar } from '../services/sar';
 
@@ -93,6 +94,8 @@ sarRouter.put('/:caseId', async (req, res, next) => {
       edited_text: payload.edited_text,
       actor: payload.actor
     });
+    invalidateCase(caseId);
+    invalidateCasesList();
     res.json(updated);
   } catch (err) {
     if (err instanceof Error && /SAR not found/i.test(err.message)) {
@@ -108,6 +111,8 @@ sarRouter.post('/approve/:caseId', async (req, res, next) => {
     const caseId = Number(req.params.caseId);
     const payload = SarApproveSchema.parse(req.body);
     const updated = await approveSar({ case_id: caseId, actor: payload.actor });
+    invalidateCase(caseId);
+    invalidateCasesList();
     res.json(updated);
   } catch (err) {
     if (err instanceof Error && /Case not found|SAR not found/i.test(err.message)) {
@@ -123,6 +128,8 @@ sarRouter.post('/reject/:caseId', async (req, res, next) => {
     const caseId = Number(req.params.caseId);
     const payload = SarRejectSchema.parse(req.body);
     await rejectSar({ case_id: caseId, actor: payload.actor, reason: payload.reason });
+    invalidateCase(caseId);
+    invalidateCasesList();
     res.json({ status: 'REJECTED', case_id: caseId });
   } catch (err) {
     if (err instanceof Error && /Case not found/i.test(err.message)) {

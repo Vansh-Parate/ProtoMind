@@ -41,7 +41,7 @@ export const SarEditorPage: React.FC = () => {
           ← Back to Cases
         </Button>
         <Card>
-          <p className="text-sm text-slate-500">{error ?? 'Case not found.'}</p>
+          <p className="text-sm text-text-secondary">{error ?? 'Case not found.'}</p>
         </Card>
       </div>
     );
@@ -79,22 +79,29 @@ export const SarEditorPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <Button variant="ghost" size="sm" onClick={() => navigate(`/cases/${detail.id}`)}>
+    <div>
+      {/* Back button */}
+      <Button variant="ghost" size="sm" onClick={() => navigate(`/cases/${detail.id}`)} className="mb-6">
         ← Back to Case #{detail.id}
       </Button>
 
+      {/* Header */}
+      <h1 className="text-2xl font-semibold tracking-tight text-text-primary mb-8">
+        SAR Editor — Case #{detail.id}
+      </h1>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="bg-slate-50">
-          <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 mb-3">
+        {/* Left: Generated Narrative */}
+        <Card className="bg-bg-main">
+          <div className="text-[11px] font-medium uppercase tracking-wider text-text-secondary mb-3">
             Generated SAR narrative
           </div>
-          <p className="text-[15px] leading-[1.8] text-slate-700 whitespace-pre-line">
+          <p className="text-sm leading-[1.8] text-text-primary whitespace-pre-line">
             {detail.narrativeGenerated}
           </p>
 
-          <div className="mt-6 border-t border-slate-200 pt-4 space-y-2 text-xs text-slate-500">
-            <div className="font-semibold uppercase tracking-[0.16em]">
+          <div className="mt-6 border-t border-border-light pt-4 space-y-2 text-xs text-text-secondary">
+            <div className="font-medium uppercase tracking-wider text-[11px]">
               Customer profile
             </div>
             <div>Customer ID: {detail.customerId}</div>
@@ -103,29 +110,28 @@ export const SarEditorPage: React.FC = () => {
           </div>
         </Card>
 
-        <Card className="relative">
+        {/* Right: Editor */}
+        <Card>
           <div className="flex items-center justify-between mb-3">
-            <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+            <div className="text-[11px] font-medium uppercase tracking-wider text-text-secondary">
               Your edits
             </div>
-            <div className="text-xs text-slate-500 space-x-3">
+            <div className="text-xs text-text-secondary space-x-3">
               <span>
-                Words:{' '}
-                <span className="font-medium text-slate-800">{wordCount}</span>
+                Words: <span className="font-medium text-text-primary">{wordCount}</span>
               </span>
               <span>
-                Characters:{' '}
-                <span className="font-medium text-slate-800">{charCount}</span>
+                Characters: <span className="font-medium text-text-primary">{charCount}</span>
               </span>
             </div>
           </div>
           <textarea
-            className="w-full h-72 md:h-80 rounded-button border border-slate-200 border-l-4 border-l-[var(--button-primary-bg)] bg-white px-3 py-2 text-sm leading-relaxed text-slate-700 resize-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--button-primary-bg)] focus-visible:ring-offset-2"
+            className="w-full h-72 md:h-80 rounded-lg border border-border-light bg-white px-4 py-3 text-sm leading-relaxed text-text-primary resize-none focus:border-text-secondary transition-colors"
             value={value}
             onChange={(e) => setValue(e.target.value)}
           />
 
-          <div className="mt-4 flex items-center justify-between text-xs text-slate-500">
+          <div className="mt-4 flex items-center justify-between text-xs text-text-secondary">
             <div>{saving ? 'Saving…' : 'Auto-save: mock'}</div>
             <div className="flex gap-2">
               <Button variant="secondary" size="sm" onClick={handleSave} disabled={saving} loading={saving}>
@@ -137,7 +143,7 @@ export const SarEditorPage: React.FC = () => {
             </div>
           </div>
           {error && (
-            <div className="mt-2 text-xs text-red-600">
+            <div className="mt-2 text-xs text-muted-danger">
               {error}
             </div>
           )}
@@ -146,4 +152,3 @@ export const SarEditorPage: React.FC = () => {
     </div>
   );
 };
-

@@ -22,6 +22,19 @@ app.use('/audit', auditRouter);
 // Basic error handler
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  const isDbUnreachable =
+    err?.name === 'PrismaClientInitializationError' ||
+    (err?.message && String(err.message).includes("Can't reach database server"));
+
+  if (isDbUnreachable) {
+    console.error('Database unreachable:', err?.message ?? err);
+    res.status(503).json({
+      message:
+        'Database unavailable. If you use Neon, open your project in the Neon dashboard to wake the database, then try again.'
+    });
+    return;
+  }
+
   console.error(err);
   res.status(500).json({ message: 'Internal server error' });
 });

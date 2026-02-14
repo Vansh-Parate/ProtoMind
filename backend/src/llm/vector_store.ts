@@ -1,6 +1,5 @@
 import type { ScoreResult } from '../scoring/engine';
 import { ChromaClient, type Collection, type EmbeddingFunction } from 'chromadb';
-import { pipeline } from '@xenova/transformers';
 
 type KnowledgeCollectionName = 'aml_typologies' | 'sar_templates' | 'regulatory_guidelines';
 
@@ -40,6 +39,8 @@ async function getEmbeddingFunction(): Promise<EmbeddingFunction> {
   if (embeddingFunction) return embeddingFunction;
 
   // Use a local sentence-transformer-style model via transformers.js.
+  // Dynamic import to avoid loading onnxruntime-node at startup.
+  const { pipeline } = await import('@xenova/transformers');
   const featureExtractor = await pipeline(
     'feature-extraction',
     process.env.SENTENCE_TRANSFORMER_MODEL ?? 'Xenova/all-MiniLM-L6-v2'
@@ -100,8 +101,8 @@ function buildRetrievalQuery(params: KnowledgeRetrievalParams): string {
     transactions.length === 0
       ? 'No transaction behaviour available.'
       : `Sample transaction behaviour (first 5 records): ${JSON.stringify(
-          transactions.slice(0, 5)
-        )}`;
+        transactions.slice(0, 5)
+      )}`;
 
   return [
     `Customer ID: ${customerId}`,

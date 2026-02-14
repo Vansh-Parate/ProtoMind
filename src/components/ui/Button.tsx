@@ -1,52 +1,37 @@
 import type React from 'react';
 import { clsx } from 'clsx';
 
-/**
- * Enterprise-grade button for SAR / banking compliance UI.
- *
- * Variant usage:
- * - primary: Main CTA (e.g. "New Case", "Submit for review")
- * - secondary: Secondary actions (e.g. "Open SAR Editor", "Save draft")
- * - ghost: Low emphasis (e.g. "Back to Cases")
- * - success: Positive action (e.g. "Approve")
- * - danger: Destructive action (e.g. "Reject")
- *
- * Sizes: sm (32px min-height), md (40px), lg (44px touch target).
- * Use `icon` for a leading icon and `loading` for async actions.
- */
-
 export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'success' | 'danger';
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
 export interface ButtonProps extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'children'> {
   variant?: ButtonVariant;
   size?: ButtonSize;
-  /** Left-aligned icon (e.g. plus for "New Case"). Spacing is applied automatically. */
   icon?: React.ReactNode;
   loading?: boolean;
   children: React.ReactNode;
 }
 
 const baseClasses =
-  'relative inline-flex items-center justify-center gap-2 font-medium tracking-[0.025em] rounded-button transition-[color,background-color,box-shadow,border-color] duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--button-primary-bg)] focus-visible:ring-offset-2 focus-visible:ring-offset-white active:transition-none disabled:pointer-events-none disabled:opacity-50 select-none';
+  'relative inline-flex items-center justify-center gap-2 font-medium rounded-lg transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text-primary/20 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 select-none';
 
 const variantClasses: Record<ButtonVariant, string> = {
   primary:
-    'bg-[var(--button-primary-bg)] text-[var(--button-primary-text)] shadow-button hover:bg-[var(--button-primary-hover)] hover:shadow-button-hover active:bg-[var(--button-primary-active)] active:shadow-button',
+    'bg-text-primary text-white hover:opacity-90 active:opacity-100',
   secondary:
-    'bg-[var(--button-secondary-bg)] text-[var(--button-secondary-text)] border border-[var(--button-secondary-border)] hover:bg-[var(--button-secondary-hover-bg)] active:bg-slate-200',
+    'bg-white text-text-primary border border-border-light hover:bg-bg-hover active:bg-gray-100',
   ghost:
-    'bg-transparent text-[var(--button-secondary-text)] hover:bg-slate-100 active:bg-slate-200',
+    'bg-transparent text-text-secondary hover:text-text-primary hover:bg-bg-hover active:bg-gray-100',
   success:
-    'bg-[var(--button-success)] text-white shadow-button hover:bg-[var(--button-success-hover)] hover:shadow-button-hover active:bg-[var(--button-success-active)] active:shadow-button',
+    'bg-white text-muted-success border border-muted-success hover:bg-muted-successBg active:bg-muted-successBg/80',
   danger:
-    'bg-white text-[var(--button-danger)] border border-[var(--button-danger)] hover:bg-rose-50 hover:border-[var(--button-danger-hover)] active:bg-rose-100 active:border-[var(--button-danger-active)]'
+    'bg-white text-muted-danger border border-muted-danger hover:bg-muted-dangerBg active:bg-muted-dangerBg/80',
 };
 
 const sizeClasses: Record<ButtonSize, string> = {
-  sm: 'text-[13px] leading-5 px-3 py-2 min-h-[32px]',
-  md: 'text-[var(--button-font-size)] leading-[var(--button-line-height)] px-5 py-2.5 min-h-[40px]',
-  lg: 'text-[15px] leading-5 px-6 py-3 min-h-[44px] min-w-[44px]'
+  sm: 'text-xs px-3 py-1.5',
+  md: 'text-sm px-5 py-2.5',
+  lg: 'text-sm px-5 py-2.5',
 };
 
 function Spinner({ className }: { className?: string }) {

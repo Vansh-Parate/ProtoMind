@@ -4,13 +4,14 @@ import path from 'path';
 import { RecursiveCharacterTextSplitter } from '@langchain/community/text_splitter';
 import { getRelevantKnowledgeForCase } from './vector_store';
 import { ChromaClient, type EmbeddingFunction } from 'chromadb';
-import { pipeline } from '@xenova/transformers';
 
 type KnowledgeCollectionName = 'aml_typologies' | 'sar_templates' | 'regulatory_guidelines';
 
 const KNOWLEDGE_ROOT = path.join(__dirname, '..', '..', 'knowledge');
 
 async function ensureEmbeddingFunction(): Promise<EmbeddingFunction> {
+  // Dynamic import to avoid loading onnxruntime-node at startup.
+  const { pipeline } = await import('@xenova/transformers');
   const featureExtractor = await pipeline(
     'feature-extraction',
     process.env.SENTENCE_TRANSFORMER_MODEL ?? 'Xenova/all-MiniLM-L6-v2'
@@ -116,7 +117,7 @@ async function main() {
   if (!fs.existsSync(KNOWLEDGE_ROOT)) {
     console.warn(
       `Knowledge directory "${KNOWLEDGE_ROOT}" does not exist. ` +
-        'Create it with subfolders "aml_typologies", "sar_templates", and "regulatory_guidelines" and re-run this script.'
+      'Create it with subfolders "aml_typologies", "sar_templates", and "regulatory_guidelines" and re-run this script.'
     );
     return;
   }

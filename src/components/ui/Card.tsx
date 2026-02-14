@@ -9,11 +9,10 @@ interface CardProps {
 export const Card: React.FC<CardProps> = ({ children, className }) => (
   <section
     className={clsx(
-      'bg-white border border-slate-200 rounded-card p-6 shadow-card hover:shadow-card-hover hover:border-slate-300 transition-all duration-200 card',
+      'bg-white border border-border-light rounded-card p-6',
       className
     )}
   >
     {children}
   </section>
 );
-

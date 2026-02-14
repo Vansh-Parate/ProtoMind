@@ -2,6 +2,13 @@ import { Router } from 'express';
 import { z } from 'zod';
 import type { Case, SARReport } from '@prisma/client';
 import { prisma } from '../core/prisma';
+import {
+  getCachedCasesList,
+  setCachedCasesList,
+  getCachedCaseDetail,
+  setCachedCaseDetail,
+  invalidateCasesList
+} from '../core/cache';
 import { AlertPayloadSchema } from '../scoring/engine';
 import { createCaseFromAlert } from '../services/cases';
 
@@ -43,7 +50,7 @@ casesRouter.post('/', async (req, res, next) => {
   try {
     const { alert } = CaseCreateSchema.parse(req.body);
     const created = await createCaseFromAlert(alert);
-    // For now return a summary; frontend doesn't call this yet.
+    invalidateCasesList();
     res.status(201).json(toSarCaseSummary(created as unknown as Case));
   } catch (err) {
     next(err);
@@ -52,11 +59,17 @@ casesRouter.post('/', async (req, res, next) => {
 
 casesRouter.get('/', async (_req, res, next) => {
   try {
+    const cached = getCachedCasesList();
+    if (cached) {
+      return res.json(cached);
+    }
     const cases = await prisma.case.findMany({
       orderBy: { created_at: 'desc' },
       take: 200
     });
-    res.json(cases.map(toSarCaseSummary));
+    const payload = cases.map(toSarCaseSummary);
+    setCachedCasesList(payload);
+    res.json(payload);
   } catch (err) {
     next(err);
   }
@@ -65,6 +78,10 @@ casesRouter.get('/', async (_req, res, next) => {
 casesRouter.get('/:caseId', async (req, res, next) => {
   try {
     const caseId = Number(req.params.caseId);
+    const cached = getCachedCaseDetail(caseId);
+    if (cached) {
+      return res.json(cached);
+    }
     const existing = await prisma.case.findUnique({
       where: { id: caseId },
       include: {
@@ -80,7 +97,9 @@ casesRouter.get('/:caseId', async (req, res, next) => {
       return;
     }
 
-    res.json(toSarCaseDetail(existing));
+    const payload = toSarCaseDetail(existing);
+    setCachedCaseDetail(caseId, payload);
+    res.json(payload);
   } catch (err) {
     next(err);
   }
