@@ -4,6 +4,51 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ---------------------------------------------------------------------------
+   SAR Design Tokens – Buttons (enterprise / banking compliance)
+   --------------------------------------------------------------------------- */
+:root {
+  /* Primary */
+  --button-primary-bg: #1e3a5f;
+  --button-primary-hover: #2a4d7c;
+  --button-primary-active: #16304d;
+  --button-primary-text: #ffffff;
+
+  /* Secondary */
+  --button-secondary-bg: transparent;
+  --button-secondary-border: #d1d5db;
+  --button-secondary-hover-bg: #f3f4f6;
+  --button-secondary-text: #374151;
+
+  /* Semantic (muted, professional) */
+  --button-success: #047857;
+  --button-success-hover: #059669;
+  --button-success-active: #065f46;
+  --button-warning: #d97706;
+  --button-danger: #b91c1c;
+  --button-danger-hover: #dc2626;
+  --button-danger-active: #991b1b;
+
+  /* Shadows & elevation */
+  --shadow-button: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-button-hover: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --shadow-button-active: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+
+  /* Typography */
+  --button-font-weight: 500;
+  --button-font-size: 0.875rem;
+  --button-letter-spacing: 0.025em;
+  --button-line-height: 1.25rem;
+
+  /* Shape & motion */
+  --button-radius: 6px;
+  --button-transition: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Focus (WCAG 2.1 AA) */
+  --button-focus-ring: 2px solid var(--button-primary-bg);
+  --button-focus-offset: 2px;
+}
+
 html,
 body,
 #root {
@@ -11,7 +56,7 @@ body,
 }
 
 body {
-  @apply bg-slate-50 text-slate-600 font-sans antialiased;
+  @apply bg-slate-100/80 text-slate-700 font-sans antialiased;
 }
 
 @keyframes pulse-status {
@@ -28,6 +73,23 @@ body {
 
 .status-pending-dot {
   animation: pulse-status 2s ease-in-out infinite;
+}
+
+/* Filter / dropdown selects – enterprise styling */
+.filter-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 16px;
+  padding-right: 36px;
+}
+.filter-select:hover {
+  background-color: rgba(248, 250, 252, 0.9);
+}
+.filter-select:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px white, 0 0 0 4px var(--button-primary-bg);
 }
 
 

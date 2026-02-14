@@ -37,12 +37,9 @@ export const SarEditorPage: React.FC = () => {
   if (error || !detail) {
     return (
       <div className="space-y-4">
-        <button
-          onClick={() => navigate('/')}
-          className="text-sm text-blue-600 hover:underline"
-        >
+        <Button variant="ghost" size="sm" onClick={() => navigate('/')}>
           ← Back to Cases
-        </button>
+        </Button>
         <Card>
           <p className="text-sm text-slate-500">{error ?? 'Case not found.'}</p>
         </Card>
@@ -83,12 +80,9 @@ export const SarEditorPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <button
-        onClick={() => navigate(`/cases/${detail.id}`)}
-        className="text-sm text-blue-600 hover:underline"
-      >
+      <Button variant="ghost" size="sm" onClick={() => navigate(`/cases/${detail.id}`)}>
         ← Back to Case #{detail.id}
-      </button>
+      </Button>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="bg-slate-50">
@@ -126,7 +120,7 @@ export const SarEditorPage: React.FC = () => {
             </div>
           </div>
           <textarea
-            className="w-full h-72 md:h-80 border-2 border-slate-200 border-l-4 border-l-blue-600 rounded-lg px-3 py-2 text-sm leading-relaxed text-slate-700 focus-visible:outline-none focus-visible:border-blue-600 focus-visible:shadow-[0_0_0_3px_rgba(37,99,235,0.1)] resize-none bg-white"
+            className="w-full h-72 md:h-80 rounded-button border border-slate-200 border-l-4 border-l-[var(--button-primary-bg)] bg-white px-3 py-2 text-sm leading-relaxed text-slate-700 resize-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--button-primary-bg)] focus-visible:ring-offset-2"
             value={value}
             onChange={(e) => setValue(e.target.value)}
           />
@@ -134,10 +128,10 @@ export const SarEditorPage: React.FC = () => {
           <div className="mt-4 flex items-center justify-between text-xs text-slate-500">
             <div>{saving ? 'Saving…' : 'Auto-save: mock'}</div>
             <div className="flex gap-2">
-              <Button variant="secondary" size="sm" onClick={handleSave} disabled={saving}>
+              <Button variant="secondary" size="sm" onClick={handleSave} disabled={saving} loading={saving}>
                 Save draft
               </Button>
-              <Button variant="primary" size="sm" onClick={handleSubmit} disabled={saving}>
+              <Button variant="primary" size="sm" onClick={handleSubmit} disabled={saving} loading={saving}>
                 Submit for review
               </Button>
             </div>

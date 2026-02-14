@@ -45,12 +45,9 @@ export const CaseDetailPage: React.FC = () => {
   if (error || !detail) {
     return (
       <div className="space-y-4">
-        <button
-          onClick={() => navigate('/')}
-          className="text-sm text-blue-600 hover:underline"
-        >
+        <Button variant="ghost" size="sm" onClick={() => navigate('/')}>
           ← Back to Cases
-        </button>
+        </Button>
         <Card>
           <p className="text-sm text-slate-500">{error ?? 'Case not found.'}</p>
         </Card>
@@ -60,12 +57,9 @@ export const CaseDetailPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <button
-        onClick={() => navigate('/')}
-        className="text-sm text-blue-600 hover:underline"
-      >
+      <Button variant="ghost" size="sm" onClick={() => navigate('/')}>
         ← Back to Cases
-      </button>
+      </Button>
 
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
         <div>
@@ -81,16 +75,12 @@ export const CaseDetailPage: React.FC = () => {
             <StatusDot status={detail.status} />
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button
-            variant="success"
-            size="md"
-            onClick={() => navigate(`/editor/${detail.id}`)}
-          >
-            ✓ Approve
+        <div className="flex flex-wrap gap-2">
+          <Button variant="success" size="md" onClick={() => navigate(`/editor/${detail.id}`)}>
+            Approve
           </Button>
           <Button variant="danger" size="md">
-            ✗ Reject
+            Reject
           </Button>
           <Button variant="secondary" size="md" onClick={() => navigate(`/editor/${detail.id}`)}>
             Open SAR Editor
@@ -151,11 +141,7 @@ export const CaseDetailPage: React.FC = () => {
           <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
             Generated SAR narrative
           </div>
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => navigate(`/editor/${detail.id}`)}
-          >
+          <Button variant="secondary" size="sm" onClick={() => navigate(`/editor/${detail.id}`)}>
             Open in editor
           </Button>
         </div>

@@ -41,11 +41,13 @@ export const CasesOverviewPage: React.FC = () => {
     <div className="space-y-6">
       <Card className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-xl bg-gradient-to-tr from-blue-100 to-blue-200 flex items-center justify-center">
-            <span className="text-blue-600 text-2xl">📋</span>
+          <div className="w-12 h-12 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center">
+            <svg className="w-6 h-6 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} aria-hidden>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
           </div>
           <div>
-            <h2 className="text-2xl font-semibold tracking-tight text-[#1e3a5f]">
+            <h2 className="text-xl font-semibold tracking-tight text-[#1e3a5f]">
               Cases Overview
             </h2>
             <p className="text-sm text-slate-500">
@@ -53,21 +55,35 @@ export const CasesOverviewPage: React.FC = () => {
             </p>
           </div>
         </div>
-        <Button variant="primary" size="md">
+        <Button
+          variant="primary"
+          size="lg"
+          icon={
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5} aria-hidden>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            </svg>
+          }
+        >
           New Case
         </Button>
       </Card>
 
       <Card className="space-y-4">
         <div className="flex flex-col md:flex-row gap-3 md:items-center md:justify-between">
-          <div className="flex flex-wrap gap-2 text-xs">
-            <select className="filter-select px-3 py-2.5 rounded-lg bg-white border-2 border-slate-200 text-sm text-slate-700 min-w-[160px] focus-visible:outline-none focus-visible:border-blue-600 focus-visible:shadow-[0_0_0_3px_rgba(37,99,235,0.1)] hover:border-slate-300">
+          <div className="flex flex-wrap gap-2">
+            <select
+              className="filter-select h-10 min-w-[160px] rounded-button border border-slate-200 bg-white px-3 text-sm text-slate-700"
+              aria-label="Filter by status"
+            >
               <option>Status: All</option>
               <option>Pending</option>
               <option>Approved</option>
               <option>Rejected</option>
             </select>
-            <select className="filter-select px-3 py-2.5 rounded-lg bg-white border-2 border-slate-200 text-sm text-slate-700 min-w-[160px] focus-visible:outline-none focus-visible:border-blue-600 focus-visible:shadow-[0_0_0_3px_rgba(37,99,235,0.1)] hover:border-slate-300">
+            <select
+              className="filter-select h-10 min-w-[160px] rounded-button border border-slate-200 bg-white px-3 text-sm text-slate-700"
+              aria-label="Filter by risk"
+            >
               <option>Risk: All</option>
               <option>High</option>
               <option>Medium</option>
@@ -75,8 +91,10 @@ export const CasesOverviewPage: React.FC = () => {
             </select>
           </div>
           <input
+            type="search"
             placeholder="Search by customer, ID, or typology"
-            className="search-input w-full md:w-[400px] px-4 pl-10 py-3 rounded-xl bg-white border-2 border-slate-200 text-[15px] text-slate-700 placeholder:text-slate-400 focus-visible:outline-none focus-visible:border-blue-600 focus-visible:shadow-[0_0_0_4px_rgba(37,99,235,0.08)] md:focus:w-[500px] transition-all"
+            aria-label="Search cases"
+            className="h-10 w-full md:w-[400px] rounded-button border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 placeholder:text-slate-400 transition-[width,box-shadow] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--button-primary-bg)] focus-visible:ring-offset-2 md:focus:w-[500px]"
           />
         </div>
 
