@@ -1,5 +1,5 @@
 import type { ScoreResult } from '../scoring/engine';
-import { ChromaClient, type Collection, type EmbeddingFunction } from 'chromadb';
+import { Pinecone } from '@pinecone-database/pinecone';
 
 type KnowledgeCollectionName = 'aml_typologies' | 'sar_templates' | 'regulatory_guidelines';
 
@@ -23,67 +23,20 @@ interface KnowledgeRetrievalParams {
   k?: number;
 }
 
-let chromaClient: ChromaClient | null = null;
-let embeddingFunction: EmbeddingFunction | null = null;
-let collectionsCache: Partial<Record<KnowledgeCollectionName, Collection>> = {};
+let pineconeIndex: ReturnType<Pinecone['index']> | null = null;
 
-async function getChromaClient(): Promise<ChromaClient> {
-  if (!chromaClient) {
-    const url = process.env.CHROMA_URL ?? 'http://localhost:8000';
-    chromaClient = new ChromaClient({ path: url });
-  }
-  return chromaClient;
-}
+function getPineconeIndex() {
+  if (pineconeIndex) return pineconeIndex;
 
-async function getEmbeddingFunction(): Promise<EmbeddingFunction> {
-  if (embeddingFunction) return embeddingFunction;
-
-  // Use a local sentence-transformer-style model via transformers.js.
-  // Dynamic import to avoid loading onnxruntime-node at startup.
-  const { pipeline } = await import('@xenova/transformers');
-  const featureExtractor = await pipeline(
-    'feature-extraction',
-    process.env.SENTENCE_TRANSFORMER_MODEL ?? 'Xenova/all-MiniLM-L6-v2'
-  );
-
-  embeddingFunction = {
-    async generate(texts: string[]): Promise<number[][]> {
-      const embeddings: number[][] = [];
-      // Sequential to avoid uncontrolled parallel memory pressure.
-      // Chroma caches embeddings, so repeated queries remain fast.
-      for (const text of texts) {
-        const output = await featureExtractor(text, {
-          pooling: 'mean',
-          normalize: true
-        });
-        // transformers.js returns a Tensor-like object with a `data` property.
-        embeddings.push(Array.from(output.data as Float32Array));
-      }
-      return embeddings;
-    }
-  };
-
-  return embeddingFunction;
-}
-
-async function getOrCreateCollection(
-  name: KnowledgeCollectionName
-): Promise<Collection> {
-  if (collectionsCache[name]) return collectionsCache[name] as Collection;
-
-  const client = await getChromaClient();
-  const embFn = await getEmbeddingFunction();
-
-  // Try to fetch existing collection; fall back to create.
-  let collection: Collection;
-  try {
-    collection = await client.getCollection({ name, embeddingFunction: embFn });
-  } catch {
-    collection = await client.createCollection({ name, embeddingFunction: embFn });
+  const apiKey = process.env.PINECONE_API_KEY;
+  if (!apiKey) {
+    throw new Error('PINECONE_API_KEY environment variable is not set.');
   }
 
-  collectionsCache[name] = collection;
-  return collection;
+  const indexName = process.env.PINECONE_INDEX_NAME ?? 'protomind-knowledge';
+  const pc = new Pinecone({ apiKey });
+  pineconeIndex = pc.index(indexName);
+  return pineconeIndex;
 }
 
 function buildRetrievalQuery(params: KnowledgeRetrievalParams): string {
@@ -115,19 +68,20 @@ function buildRetrievalQuery(params: KnowledgeRetrievalParams): string {
 }
 
 /**
- * Retrieve top-k knowledge snippets across all configured collections.
+ * Retrieve top-k knowledge snippets across all configured namespaces in Pinecone.
  *
- * This function is used both by the ingestion script (for sanity checks)
- * and by the main SAR generation flow.
+ * Uses Pinecone's integrated embedding — the query text is embedded server-side
+ * by the model configured on the index (e.g. llama-text-embed-v2).
  */
 export async function getRelevantKnowledgeForCase(
   params: KnowledgeRetrievalParams
 ): Promise<KnowledgeRetrievalResult> {
   const { k = 5 } = params;
   const query = buildRetrievalQuery(params);
+  const index = getPineconeIndex();
 
-  // Query each collection independently, then merge the results.
-  const collectionNames: KnowledgeCollectionName[] = [
+  // Each knowledge category is stored as a separate Pinecone namespace.
+  const namespaces: KnowledgeCollectionName[] = [
     'aml_typologies',
     'sar_templates',
     'regulatory_guidelines'
@@ -135,26 +89,30 @@ export async function getRelevantKnowledgeForCase(
 
   const allDocs: RetrievedKnowledgeDocument[] = [];
 
-  for (const collectionName of collectionNames) {
-    const collection = await getOrCreateCollection(collectionName);
-
-    const results = await collection.query({
-      queryTexts: [query],
-      nResults: k
-    });
-
-    const ids = results.ids?.[0] ?? [];
-    const docs = results.documents?.[0] ?? [];
-    const metadatas = results.metadatas?.[0] ?? [];
-
-    for (let i = 0; i < ids.length; i += 1) {
-      if (!docs[i]) continue;
-      allDocs.push({
-        id: String(ids[i]),
-        content: String(docs[i]),
-        metadata: (metadatas[i] as Record<string, unknown>) ?? {},
-        collection: collectionName
+  for (const ns of namespaces) {
+    try {
+      const results = await index.namespace(ns).searchRecords({
+        query: {
+          inputs: { text: query },
+          topK: k
+        },
+        fields: ['text', 'source', 'collection']
       });
+
+      const hits = (results as any).result?.hits ?? [];
+
+      for (const hit of hits) {
+        const fields = hit.fields ?? {};
+        allDocs.push({
+          id: String(hit._id ?? hit.id ?? ''),
+          content: String(fields.text ?? ''),
+          metadata: { source: fields.source, ...fields },
+          collection: ns
+        });
+      }
+    } catch (err) {
+      // If the namespace is empty or doesn't exist yet, skip gracefully.
+      console.warn(`[vector_store] Failed to query namespace "${ns}":`, err);
     }
   }
 
@@ -175,4 +133,3 @@ export async function getRelevantKnowledgeForCase(
     documents: topDocs
   };
 }
-
