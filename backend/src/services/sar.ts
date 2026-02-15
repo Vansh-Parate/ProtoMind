@@ -5,7 +5,7 @@ import { scoreAlert } from '../scoring/engine';
 import { detectTypology } from '../typologies/detector';
 
 export async function generateSarForCase(params: {
-  case_id: number;
+  case_id: bigint;
   provider: LLMProvider;
   regenerate?: boolean;
   actor?: string;
@@ -58,15 +58,15 @@ export async function generateSarForCase(params: {
     case_id,
     action: 'SAR_GENERATED',
     actor,
-    input_snapshot: { case_id },
-    output_snapshot: { sar_id: sar.id }
+    input_snapshot: { case_id: Number(case_id) },
+    output_snapshot: { sar_id: Number(sar.id) }
   });
 
   return sar;
 }
 
 export async function updateSarEdits(params: {
-  case_id: number;
+  case_id: bigint;
   edited_text: string;
   actor: string;
 }) {
@@ -88,13 +88,13 @@ export async function updateSarEdits(params: {
     case_id,
     action: 'SAR_EDITED',
     actor,
-    output_snapshot: { sar_id: updated.id }
+    output_snapshot: { sar_id: Number(updated.id) }
   });
 
   return updated;
 }
 
-export async function approveSar(params: { case_id: number; actor: string }) {
+export async function approveSar(params: { case_id: bigint; actor: string }) {
   const { case_id, actor } = params;
 
   const existingCase = await prisma.case.findUnique({ where: { id: case_id } });
@@ -124,13 +124,13 @@ export async function approveSar(params: { case_id: number; actor: string }) {
     case_id,
     action: 'SAR_APPROVED',
     actor,
-    output_snapshot: { sar_id: sar.id }
+    output_snapshot: { sar_id: Number(sar.id) }
   });
 
   return sar;
 }
 
-export async function rejectSar(params: { case_id: number; actor: string; reason?: string }) {
+export async function rejectSar(params: { case_id: bigint; actor: string; reason?: string }) {
   const { case_id, actor, reason } = params;
 
   const existingCase = await prisma.case.findUnique({ where: { id: case_id } });

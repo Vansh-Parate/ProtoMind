@@ -42,7 +42,8 @@ function toSarCaseDetail(c: Case & { sarReports: SARReport[] }) {
     ...toSarCaseSummary(c),
     whyGenerated,
     narrativeGenerated: sar?.generated_text ?? '',
-    narrativeEdited: sar?.edited_text ?? ''
+    narrativeEdited: sar?.edited_text ?? '',
+    confidenceScore: c.confidence_score
   };
 }
 
@@ -77,8 +78,8 @@ casesRouter.get('/', async (_req, res, next) => {
 
 casesRouter.get('/:caseId', async (req, res, next) => {
   try {
-    const caseId = Number(req.params.caseId);
-    const cached = getCachedCaseDetail(caseId);
+    const caseId = BigInt(req.params.caseId);
+    const cached = getCachedCaseDetail(Number(caseId));
     if (cached) {
       return res.json(cached);
     }
@@ -98,7 +99,7 @@ casesRouter.get('/:caseId', async (req, res, next) => {
     }
 
     const payload = toSarCaseDetail(existing);
-    setCachedCaseDetail(caseId, payload);
+    setCachedCaseDetail(Number(caseId), payload);
     res.json(payload);
   } catch (err) {
     next(err);

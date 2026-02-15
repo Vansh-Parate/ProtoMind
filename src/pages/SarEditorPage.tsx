@@ -132,7 +132,7 @@ export const SarEditorPage: React.FC = () => {
           />
 
           <div className="mt-4 flex items-center justify-between text-xs text-text-secondary">
-            <div>{saving ? 'Saving…' : 'Auto-save: mock'}</div>
+            <div>{saving ? 'Saving…' : 'Save draft to store edits'}</div>
             <div className="flex gap-2">
               <Button variant="secondary" size="sm" onClick={handleSave} disabled={saving} loading={saving}>
                 Save draft

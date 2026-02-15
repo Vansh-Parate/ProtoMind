@@ -4,14 +4,21 @@ import { ScoreResult } from '../scoring/engine';
 import { logAuditEvent } from '../audit/service';
 import { getRelevantKnowledgeForCase, type RetrievedKnowledgeDocument } from './vector_store';
 import { runSarChainWithRetry, renderNarrativeFromStructuredSar } from './sar_chain';
+import { generateSarFromStructuredSummary } from './sar_from_summary';
 
 export interface LLMProvider {
   generateSar(params: {
-    case_id: number;
+    case_id: bigint;
     alert_payload: Record<string, unknown>;
     score: ScoreResult;
     typology: string;
   }): Promise<string>;
+
+  /**
+   * Generate a full SAR narrative from a structured summary string (e.g. from ML pipeline).
+   * Use this when you already have: Subject Information, Activity Overview, Transaction Indicators, etc.
+   */
+  generateSarFromStructuredSummary(structuredSummary: string): Promise<string>;
 }
 
 /**
@@ -20,7 +27,7 @@ export interface LLMProvider {
  */
 export class MockLLMProvider implements LLMProvider {
   async generateSar(params: {
-    case_id: number;
+    case_id: bigint;
     alert_payload: Record<string, unknown>;
     score: ScoreResult;
     typology: string;
@@ -53,6 +60,25 @@ export class MockLLMProvider implements LLMProvider {
       '',
       'Recommendation',
       '- Recommend manual review by an AML analyst before filing or closing the alert.'
+    ].join('\n');
+  }
+
+  async generateSarFromStructuredSummary(structuredSummary: string): Promise<string> {
+    return [
+      'Customer Profile',
+      '- Based on structured alert summary below.',
+      '',
+      'Activity Summary',
+      '- See structured summary.',
+      '',
+      'Suspicious Indicators',
+      '- This is a deterministic mock narrative from structured summary (development).',
+      '',
+      'Recommendation',
+      '- Recommend manual review by an AML analyst.',
+      '',
+      '--- Structured summary used ---',
+      structuredSummary.slice(0, 1500)
     ].join('\n');
   }
 }
@@ -104,7 +130,7 @@ export class LangChainLLMProvider implements LLMProvider {
   }
 
   async generateSar(params: {
-    case_id: number;
+    case_id: bigint;
     alert_payload: Record<string, unknown>;
     score: ScoreResult;
     typology: string;
@@ -197,6 +223,18 @@ export class LangChainLLMProvider implements LLMProvider {
 
       throw new SarGenerationUnavailableError();
     }
+  }
+
+  async generateSarFromStructuredSummary(structuredSummary: string): Promise<string> {
+    if (!this.model) {
+      const mock = new MockLLMProvider();
+      return mock.generateSarFromStructuredSummary(structuredSummary);
+    }
+    const { narrative } = await generateSarFromStructuredSummary(
+      this.model,
+      structuredSummary
+    );
+    return narrative;
   }
 }
 

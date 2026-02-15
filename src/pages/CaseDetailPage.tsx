@@ -173,7 +173,11 @@ export const CaseDetailPage: React.FC = () => {
         </div>
         <div className="bg-white border border-border-light rounded-card p-5">
           <div className="text-[11px] uppercase tracking-wider font-medium text-text-tertiary mb-1">Confidence</div>
-          <div className="text-2xl font-semibold text-text-primary">89%</div>
+          <div className="text-2xl font-semibold text-text-primary">
+            {detail.confidenceScore != null
+              ? `${Math.round(detail.confidenceScore * 100)}%`
+              : '—'}
+          </div>
         </div>
       </div>
 
@@ -212,7 +216,10 @@ export const CaseDetailPage: React.FC = () => {
             </div>
           </div>
           <div className="text-xs text-text-tertiary mb-4">
-            Confidence: 89% • Typology: {detail.typology}
+            {detail.confidenceScore != null
+              ? `Confidence: ${Math.round(detail.confidenceScore * 100)}% • `
+              : ''}
+            Typology: {detail.typology}
           </div>
           <ul className="space-y-2.5">
             {detail.whyGenerated.map((item, i) => (

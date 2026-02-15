@@ -1,4 +1,11 @@
 import 'dotenv/config';
+
+// BigInt cannot be serialized by JSON.stringify by default.
+// Supabase/PostgreSQL returns BigInt IDs which need this polyfill.
+(BigInt.prototype as any).toJSON = function () {
+  return String(this);
+};
+
 import express from 'express';
 import cors from 'cors';
 import { json } from 'body-parser';
@@ -30,7 +37,7 @@ app.use((err: any, _req: express.Request, res: express.Response, _next: express.
     console.error('Database unreachable:', err?.message ?? err);
     res.status(503).json({
       message:
-        'Database unavailable. If you use Neon, open your project in the Neon dashboard to wake the database, then try again.'
+        'Database unavailable. Check that your Supabase project is active and the connection strings are correct.'
     });
     return;
   }

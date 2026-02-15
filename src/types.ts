@@ -16,5 +16,7 @@ export interface SarCaseDetail extends SarCaseSummary {
   whyGenerated: string[];
   narrativeGenerated: string;
   narrativeEdited: string;
+  /** 0–1 confidence from model; may be undefined for older data */
+  confidenceScore?: number;
 }
 
