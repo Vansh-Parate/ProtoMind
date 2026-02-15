@@ -8,7 +8,7 @@ import { generateSarFromStructuredSummary } from './sar_from_summary';
 
 export interface LLMProvider {
   generateSar(params: {
-    case_id: bigint;
+    case_id: number;
     alert_payload: Record<string, unknown>;
     score: ScoreResult;
     typology: string;
@@ -27,7 +27,7 @@ export interface LLMProvider {
  */
 export class MockLLMProvider implements LLMProvider {
   async generateSar(params: {
-    case_id: bigint;
+    case_id: number;
     alert_payload: Record<string, unknown>;
     score: ScoreResult;
     typology: string;
@@ -130,7 +130,7 @@ export class LangChainLLMProvider implements LLMProvider {
   }
 
   async generateSar(params: {
-    case_id: bigint;
+    case_id: number;
     alert_payload: Record<string, unknown>;
     score: ScoreResult;
     typology: string;

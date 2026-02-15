@@ -78,8 +78,8 @@ casesRouter.get('/', async (_req, res, next) => {
 
 casesRouter.get('/:caseId', async (req, res, next) => {
   try {
-    const caseId = BigInt(req.params.caseId);
-    const cached = getCachedCaseDetail(Number(caseId));
+    const caseId = Number(req.params.caseId);
+    const cached = getCachedCaseDetail(caseId);
     if (cached) {
       return res.json(cached);
     }
@@ -98,8 +98,8 @@ casesRouter.get('/:caseId', async (req, res, next) => {
       return;
     }
 
-    const payload = toSarCaseDetail(existing);
-    setCachedCaseDetail(Number(caseId), payload);
+    const payload = toSarCaseDetail(existing as Case & { sarReports: SARReport[] });
+    setCachedCaseDetail(caseId, payload);
     res.json(payload);
   } catch (err) {
     next(err);

@@ -4,30 +4,74 @@ import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { RiskBadge } from '../components/ui/RiskBadge';
 import { StatusDot } from '../components/ui/StatusDot';
+import { SarFormReport } from '../components/SarFormReport';
+import { defaultSarFormData } from '../sarForm';
+import { PdfPreviewModal } from '../components/PdfPreviewModal';
 import type { SarCaseDetail, RiskLevel } from '../types';
-import { fetchCaseDetail } from '../api/client';
+import { fetchCaseDetail, approveSar, rejectSar } from '../api/client';
+import { unpackEdits } from './SarEditorPage';
 
 function getRiskAccentColor(level: RiskLevel) {
   switch (level) {
     case 'HIGH': return { bg: 'bg-muted-dangerBg', border: 'border-muted-danger/30', text: 'text-muted-danger', accent: '#B91C1C' };
     case 'MEDIUM': return { bg: 'bg-riskMediumYellow-bg', border: 'border-riskMediumYellow-text/40', text: 'text-riskMediumYellow-text', accent: '#B45309' };
     case 'LOW': return { bg: 'bg-muted-successBg', border: 'border-muted-success/30', text: 'text-muted-success', accent: '#047857' };
+    default: return { bg: 'bg-bg-main', border: 'border-border-light', text: 'text-text-secondary', accent: '#64748B' };
   }
 }
 
 export const CaseDetailPage: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const pdfRef = React.useRef<HTMLDivElement>(null);
   const [detail, setDetail] = React.useState<SarCaseDetail | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
+  const [showPdfPreview, setShowPdfPreview] = React.useState(false);
+  const [actionLoading, setActionLoading] = React.useState<'approve' | 'reject' | null>(null);
+  const [actionError, setActionError] = React.useState<string | null>(null);
+
+  const refetchDetail = React.useCallback(async () => {
+    if (!id) return;
+    const data = await fetchCaseDetail(id, true);
+    setDetail(data);
+  }, [id]);
+
+  const handleApprove = React.useCallback(async () => {
+    if (!id) return;
+    setActionLoading('approve');
+    setActionError(null);
+    try {
+      await approveSar({ caseId: id, actor: 'demo-analyst' });
+      await refetchDetail();
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : 'Failed to approve');
+    } finally {
+      setActionLoading(null);
+    }
+  }, [id, refetchDetail]);
+
+  const handleReject = React.useCallback(async () => {
+    if (!id) return;
+    if (!window.confirm('Reject this case? The case status will be set to Rejected.')) return;
+    setActionLoading('reject');
+    setActionError(null);
+    try {
+      await rejectSar({ caseId: id, actor: 'demo-analyst' });
+      await refetchDetail();
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : 'Failed to reject');
+    } finally {
+      setActionLoading(null);
+    }
+  }, [id, refetchDetail]);
 
   React.useEffect(() => {
     if (!id) return;
     let cancelled = false;
     (async () => {
       try {
-        const data = await fetchCaseDetail(id);
+        const data = await fetchCaseDetail(id, true);
         if (!cancelled) {
           setDetail(data);
         }
@@ -131,13 +175,25 @@ export const CaseDetailPage: React.FC = () => {
             </div>
           </div>
           <div className="flex flex-wrap gap-2 flex-shrink-0">
-            <Button variant="success" size="md">
+            <Button
+              variant="success"
+              size="md"
+              onClick={handleApprove}
+              disabled={detail.status === 'APPROVED' || actionLoading !== null}
+              loading={actionLoading === 'approve'}
+            >
               <span className="flex items-center gap-1.5">
                 <iconify-icon icon="solar:check-circle-linear" width="16" />
                 Approve
               </span>
             </Button>
-            <Button variant="danger" size="md">
+            <Button
+              variant="danger"
+              size="md"
+              onClick={handleReject}
+              disabled={detail.status === 'REJECTED' || actionLoading !== null}
+              loading={actionLoading === 'reject'}
+            >
               <span className="flex items-center gap-1.5">
                 <iconify-icon icon="solar:close-circle-linear" width="16" />
                 Reject
@@ -152,6 +208,12 @@ export const CaseDetailPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {actionError && (
+        <div className="mb-4 px-4 py-2 rounded-lg bg-red-50 border border-red-200 text-sm text-red-700">
+          {actionError}
+        </div>
+      )}
 
       {/* Score + Stats Bar */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
@@ -222,7 +284,7 @@ export const CaseDetailPage: React.FC = () => {
             Typology: {detail.typology}
           </div>
           <ul className="space-y-2.5">
-            {detail.whyGenerated.map((item, i) => (
+            {(Array.isArray(detail.whyGenerated) ? detail.whyGenerated : []).map((item, i) => (
               <li key={item} className="flex items-start gap-3 text-sm text-text-primary">
                 <div className="flex-shrink-0 w-5 h-5 rounded-full bg-bg-main flex items-center justify-center text-[10px] font-medium text-text-tertiary mt-0.5">
                   {i + 1}
@@ -253,28 +315,56 @@ export const CaseDetailPage: React.FC = () => {
         </div>
       </Card>
 
-      {/* Generated Narrative */}
+      {/* SAR Report (formal form format) */}
       <Card>
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <iconify-icon icon="solar:document-text-linear" width="18" class="text-text-tertiary" />
             <div className="text-[11px] font-medium uppercase tracking-wider text-text-secondary">
-              Generated SAR Narrative
+              SAR Report
             </div>
           </div>
-          <Button variant="secondary" size="sm" onClick={() => navigate(`/editor/${detail.id}`)}>
-            <span className="flex items-center gap-1.5">
-              <iconify-icon icon="solar:pen-new-square-linear" width="14" />
-              Open in editor
-            </span>
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="secondary" size="sm" onClick={() => setShowPdfPreview(true)}>
+              <span className="flex items-center gap-1.5">
+                <iconify-icon icon="solar:download-linear" width="14" />
+                Download PDF
+              </span>
+            </Button>
+            <Button variant="secondary" size="sm" onClick={() => navigate(`/editor/${detail.id}`)}>
+              <span className="flex items-center gap-1.5">
+                <iconify-icon icon="solar:pen-new-square-linear" width="14" />
+                Open in editor
+              </span>
+            </Button>
+          </div>
         </div>
-        <div className="bg-bg-main rounded-lg border border-border-light p-5">
-          <p className="text-sm leading-[1.8] text-text-primary whitespace-pre-line">
-            {detail.narrativeGenerated}
-          </p>
+        <div className="bg-white rounded-lg border border-border-light overflow-x-auto">
+          <CaseDetailSarForm detail={detail} pdfRef={pdfRef} />
         </div>
       </Card>
+
+      <PdfPreviewModal
+        isOpen={showPdfPreview}
+        onClose={() => setShowPdfPreview(false)}
+        elementRef={pdfRef}
+        filename={`SAR-Case-${detail.id}.pdf`}
+      />
     </div>
   );
 };
+
+function CaseDetailSarForm({ detail, pdfRef }: { detail: SarCaseDetail; pdfRef: React.RefObject<HTMLDivElement | null> }) {
+  const unpacked = React.useMemo(() => unpackEdits(detail.narrativeEdited, detail), [detail.narrativeEdited, detail]);
+  const narrative = unpacked.narrative || detail.narrativeGenerated || '';
+  return (
+    <div ref={pdfRef}>
+      <SarFormReport
+        detail={detail}
+        formData={unpacked.formData}
+        narrativeValue={narrative}
+        editable={false}
+      />
+    </div>
+  );
+}

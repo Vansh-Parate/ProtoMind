@@ -58,12 +58,33 @@ export function fetchCases(): Promise<SarCaseSummary[]> {
   });
 }
 
-export function fetchCaseDetail(id: string): Promise<SarCaseDetail> {
-  const entry = caseDetailCache.get(id);
-  if (entry && Date.now() <= entry.expiresAt) return Promise.resolve(entry.data);
+/** Ensure API response has safe shape for rendering (avoid white screen from undefined). */
+function normalizeCaseDetail(data: unknown): SarCaseDetail {
+  const d = data as Record<string, unknown>;
+  return {
+    id: d?.id != null ? String(d.id) : '',
+    customerId: typeof d?.customerId === 'string' ? d.customerId : '',
+    typology: typeof d?.typology === 'string' ? d.typology : '',
+    risk: d?.risk === 'HIGH' || d?.risk === 'MEDIUM' || d?.risk === 'LOW' ? d.risk : 'LOW',
+    status: d?.status === 'PENDING' || d?.status === 'APPROVED' || d?.status === 'REJECTED' ? d.status : 'PENDING',
+    createdAt: typeof d?.createdAt === 'string' ? d.createdAt : new Date().toISOString(),
+    score: typeof d?.score === 'number' ? d.score : 0,
+    whyGenerated: Array.isArray(d?.whyGenerated) ? d.whyGenerated.map((x: unknown) => String(x ?? '')) : [],
+    narrativeGenerated: typeof d?.narrativeGenerated === 'string' ? d.narrativeGenerated : '',
+    narrativeEdited: typeof d?.narrativeEdited === 'string' ? d.narrativeEdited : '',
+    confidenceScore: typeof d?.confidenceScore === 'number' ? d.confidenceScore : undefined,
+  };
+}
+
+export function fetchCaseDetail(id: string, skipCache = false): Promise<SarCaseDetail> {
+  if (!skipCache) {
+    const entry = caseDetailCache.get(id);
+    if (entry && Date.now() <= entry.expiresAt) return Promise.resolve(entry.data as SarCaseDetail);
+  }
   return request<SarCaseDetail>(`/cases/${id}`).then((data) => {
-    caseDetailCache.set(id, { data, expiresAt: Date.now() + CACHE_TTL_MS });
-    return data;
+    const normalized = normalizeCaseDetail(data);
+    caseDetailCache.set(id, { data: normalized, expiresAt: Date.now() + CACHE_TTL_MS });
+    return normalized;
   });
 }
 
@@ -106,6 +127,18 @@ export function approveSar(params: { caseId: string; actor: string }) {
   return request(`/sar/approve/${caseId}`, {
     method: 'POST',
     body: JSON.stringify({ actor })
+  }).then((result) => {
+    invalidateCaseDetailCache(caseId);
+    invalidateCasesCache();
+    return result;
+  });
+}
+
+export function rejectSar(params: { caseId: string; actor: string; reason?: string }) {
+  const { caseId, actor, reason } = params;
+  return request(`/sar/reject/${caseId}`, {
+    method: 'POST',
+    body: JSON.stringify({ actor, reason })
   }).then((result) => {
     invalidateCaseDetailCache(caseId);
     invalidateCasesCache();

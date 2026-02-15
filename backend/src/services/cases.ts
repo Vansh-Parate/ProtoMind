@@ -35,7 +35,7 @@ export async function listCases() {
   });
 }
 
-export async function getCaseById(caseId: bigint) {
+export async function getCaseById(caseId: number) {
   return prisma.case.findUnique({
     where: { id: caseId }
   });

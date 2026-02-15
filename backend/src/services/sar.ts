@@ -5,7 +5,7 @@ import { scoreAlert } from '../scoring/engine';
 import { detectTypology } from '../typologies/detector';
 
 export async function generateSarForCase(params: {
-  case_id: bigint;
+  case_id: number;
   provider: LLMProvider;
   regenerate?: boolean;
   actor?: string;
@@ -39,20 +39,20 @@ export async function generateSarForCase(params: {
 
   const sar = existingSar
     ? await prisma.sARReport.update({
-        where: { id: existingSar.id },
-        data: {
-          generated_text,
-          edited_text: null,
-          approved_by: null,
-          approved_at: null
-        }
-      })
+      where: { id: existingSar.id },
+      data: {
+        generated_text,
+        edited_text: null,
+        approved_by: null,
+        approved_at: null
+      }
+    })
     : await prisma.sARReport.create({
-        data: {
-          case_id,
-          generated_text
-        }
-      });
+      data: {
+        case_id,
+        generated_text
+      }
+    });
 
   await logAuditEvent({
     case_id,
@@ -66,35 +66,49 @@ export async function generateSarForCase(params: {
 }
 
 export async function updateSarEdits(params: {
-  case_id: bigint;
+  case_id: number;
   edited_text: string;
   actor: string;
 }) {
   const { case_id, edited_text, actor } = params;
 
-  const existingSar = await prisma.sARReport.findFirst({
-    where: { case_id }
+  const existingCase = await prisma.case.findUnique({
+    where: { id: case_id }
   });
-  if (!existingSar) {
-    throw new Error('SAR not found for case');
+  if (!existingCase) {
+    throw new Error('Case not found');
   }
 
-  const updated = await prisma.sARReport.update({
-    where: { id: existingSar.id },
-    data: { edited_text }
+  let existingSar = await prisma.sARReport.findFirst({
+    where: { case_id }
   });
+
+  if (!existingSar) {
+    existingSar = await prisma.sARReport.create({
+      data: {
+        case_id,
+        generated_text: '',
+        edited_text
+      }
+    });
+  } else {
+    existingSar = await prisma.sARReport.update({
+      where: { id: existingSar.id },
+      data: { edited_text }
+    });
+  }
 
   await logAuditEvent({
     case_id,
     action: 'SAR_EDITED',
     actor,
-    output_snapshot: { sar_id: Number(updated.id) }
+    output_snapshot: { sar_id: Number(existingSar.id) }
   });
 
-  return updated;
+  return existingSar;
 }
 
-export async function approveSar(params: { case_id: bigint; actor: string }) {
+export async function approveSar(params: { case_id: number; actor: string }) {
   const { case_id, actor } = params;
 
   const existingCase = await prisma.case.findUnique({ where: { id: case_id } });
@@ -130,7 +144,7 @@ export async function approveSar(params: { case_id: bigint; actor: string }) {
   return sar;
 }
 
-export async function rejectSar(params: { case_id: bigint; actor: string; reason?: string }) {
+export async function rejectSar(params: { case_id: number; actor: string; reason?: string }) {
   const { case_id, actor, reason } = params;
 
   const existingCase = await prisma.case.findUnique({ where: { id: case_id } });
