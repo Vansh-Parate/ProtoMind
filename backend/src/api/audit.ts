@@ -6,8 +6,8 @@ export const auditRouter = Router();
 
 auditRouter.get('/:caseId', async (req, res, next) => {
   try {
-    const caseId = BigInt(req.params.caseId);
-    const cached = getCachedAudit(Number(caseId));
+    const caseId = Number(req.params.caseId);
+    const cached = getCachedAudit(caseId);
     if (cached) {
       return res.json(cached);
     }
@@ -23,7 +23,7 @@ auditRouter.get('/:caseId', async (req, res, next) => {
       orderBy: { timestamp: 'asc' }
     });
 
-    setCachedAudit(Number(caseId), logs);
+    setCachedAudit(caseId, logs);
     res.json(logs);
   } catch (err) {
     next(err);

@@ -1,6 +1,7 @@
 import type React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { PageShell } from './components/layout/PageShell';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { DashboardPage } from './pages/DashboardPage';
 import { CasesOverviewPage } from './pages/CasesOverviewPage';
 import { CaseDetailPage } from './pages/CaseDetailPage';
@@ -13,8 +14,8 @@ const App: React.FC = () => {
       <Routes>
         <Route path="/" element={<DashboardPage />} />
         <Route path="/cases" element={<CasesOverviewPage />} />
-        <Route path="/cases/:id" element={<CaseDetailPage />} />
-        <Route path="/editor/:id" element={<SarEditorPage />} />
+        <Route path="/cases/:id" element={<ErrorBoundary><CaseDetailPage /></ErrorBoundary>} />
+        <Route path="/editor/:id" element={<ErrorBoundary><SarEditorPage /></ErrorBoundary>} />
         <Route path="/audit" element={<AuditTimelinePage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

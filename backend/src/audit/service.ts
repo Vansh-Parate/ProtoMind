@@ -2,7 +2,7 @@ import { Prisma } from '@prisma/client';
 import { prisma } from '../core/prisma';
 
 export async function logAuditEvent(params: {
-  case_id: bigint;
+  case_id: number | bigint;
   action: string;
   actor: string;
   input_snapshot?: Prisma.InputJsonValue;

@@ -51,7 +51,7 @@ sarRouter.post('/generate-from-summary', async (req, res, next) => {
 
 sarRouter.post('/score/:caseId', async (req, res, next) => {
   try {
-    const caseId = BigInt(req.params.caseId);
+    const caseId = Number(req.params.caseId);
     const existing = await prisma.case.findUnique({ where: { id: caseId } });
     if (!existing) {
       res.status(404).json({ message: 'Case not found' });
@@ -72,7 +72,7 @@ sarRouter.post('/score/:caseId', async (req, res, next) => {
 
 sarRouter.post('/generate-sar/:caseId', async (req, res, next) => {
   try {
-    const caseId = BigInt(req.params.caseId);
+    const caseId = Number(req.params.caseId);
     const { regenerate = false } = SarGenerateSchema.parse(req.body);
     const provider = new LangChainLLMProvider();
     const sar = await generateSarForCase({
@@ -97,7 +97,7 @@ sarRouter.post('/generate-sar/:caseId', async (req, res, next) => {
 
 sarRouter.get('/:caseId', async (req, res, next) => {
   try {
-    const caseId = BigInt(req.params.caseId);
+    const caseId = Number(req.params.caseId);
     const existing = await prisma.sARReport.findFirst({ where: { case_id: caseId } });
     if (!existing) {
       res.status(404).json({ message: 'SAR not found' });
@@ -111,14 +111,14 @@ sarRouter.get('/:caseId', async (req, res, next) => {
 
 sarRouter.put('/:caseId', async (req, res, next) => {
   try {
-    const caseId = BigInt(req.params.caseId);
+    const caseId = Number(req.params.caseId);
     const payload = SarEditSchema.parse(req.body);
     const updated = await updateSarEdits({
       case_id: caseId,
       edited_text: payload.edited_text,
       actor: payload.actor
     });
-    invalidateCase(Number(caseId));
+    invalidateCase(caseId);
     invalidateCasesList();
     res.json(updated);
   } catch (err) {
@@ -132,10 +132,10 @@ sarRouter.put('/:caseId', async (req, res, next) => {
 
 sarRouter.post('/approve/:caseId', async (req, res, next) => {
   try {
-    const caseId = BigInt(req.params.caseId);
+    const caseId = Number(req.params.caseId);
     const payload = SarApproveSchema.parse(req.body);
     const updated = await approveSar({ case_id: caseId, actor: payload.actor });
-    invalidateCase(Number(caseId));
+    invalidateCase(caseId);
     invalidateCasesList();
     res.json(updated);
   } catch (err) {
@@ -149,10 +149,10 @@ sarRouter.post('/approve/:caseId', async (req, res, next) => {
 
 sarRouter.post('/reject/:caseId', async (req, res, next) => {
   try {
-    const caseId = BigInt(req.params.caseId);
+    const caseId = Number(req.params.caseId);
     const payload = SarRejectSchema.parse(req.body);
     await rejectSar({ case_id: caseId, actor: payload.actor, reason: payload.reason });
-    invalidateCase(Number(caseId));
+    invalidateCase(caseId);
     invalidateCasesList();
     res.json({ status: 'REJECTED', case_id: String(caseId) });
   } catch (err) {
