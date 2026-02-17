@@ -40,13 +40,27 @@ export const CasesOverviewPage: React.FC = () => {
     };
   }, []);
 
+  const [currentPage, setCurrentPage] = React.useState(1);
+  const itemsPerPage = 50;
+
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [activeTab, search]);
+
+  const [riskFilter, setRiskFilter] = React.useState<'all' | 'high' | 'medium' | 'low'>('all');
+
   const filteredCases = React.useMemo(() => {
     let result = cases;
 
-    // Tab filter
+    // Tab filter (Status)
     if (activeTab === 'pending') result = result.filter(c => c.status === 'PENDING');
     else if (activeTab === 'approved') result = result.filter(c => c.status === 'APPROVED');
     else if (activeTab === 'rejected') result = result.filter(c => c.status === 'REJECTED');
+
+    // Risk Filter
+    if (riskFilter !== 'all') {
+      result = result.filter(c => c.risk.toLowerCase() === riskFilter);
+    }
 
     // Search filter
     if (search.trim()) {
@@ -60,7 +74,13 @@ export const CasesOverviewPage: React.FC = () => {
     }
 
     return result;
-  }, [cases, activeTab, search]);
+  }, [cases, activeTab, search, riskFilter]);
+
+  const totalPages = Math.ceil(filteredCases.length / itemsPerPage);
+  const paginatedCases = filteredCases.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   const tabs: { key: TabFilter; label: string }[] = [
     { key: 'all', label: 'All Cases' },
@@ -73,6 +93,7 @@ export const CasesOverviewPage: React.FC = () => {
     const date = new Date(dateStr);
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
+    console.log();
     const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
@@ -95,20 +116,10 @@ export const CasesOverviewPage: React.FC = () => {
             Suspicious Activity Reports management
           </p>
         </div>
-        <Button
-          variant="primary"
-          size="md"
-          icon={
-            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5} aria-hidden>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-            </svg>
-          }
-        >
-          New Case
-        </Button>
+        {/* New Case button removed as requested */}
       </div>
 
-      {/* Tabs & Search */}
+      {/* Tabs & Search & Filter */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-10 border-b border-border-light pb-0">
         <div className="flex gap-8">
           {tabs.map(tab => (
@@ -116,15 +127,32 @@ export const CasesOverviewPage: React.FC = () => {
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
               className={`pb-4 text-sm font-medium transition-all border-b-2 ${activeTab === tab.key
-                  ? 'text-text-primary border-text-primary'
-                  : 'text-text-secondary hover:text-text-primary border-transparent hover:border-border-focus'
+                ? 'text-text-primary border-text-primary'
+                : 'text-text-secondary hover:text-text-primary border-transparent hover:border-border-focus'
                 }`}
             >
               {tab.label}
             </button>
           ))}
         </div>
-        <div className="pb-2">
+        <div className="pb-2 flex items-center gap-4">
+          {/* Risk Filter */}
+          <div className="relative">
+            <select
+              value={riskFilter}
+              onChange={(e) => setRiskFilter(e.target.value as any)}
+              className="appearance-none pl-3 pr-8 py-2 bg-white border border-border-light rounded-lg text-sm text-text-primary focus:border-text-secondary transition-colors outline-none cursor-pointer hover:bg-bg-hover"
+            >
+              <option value="all">All Risks</option>
+              <option value="high">High Risk</option>
+              <option value="medium">Medium Risk</option>
+              <option value="low">Low Risk</option>
+            </select>
+            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-text-tertiary">
+              <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" /></svg>
+            </div>
+          </div>
+
           <div className="relative group">
             <iconify-icon
               icon="solar:magnifer-linear"
@@ -177,7 +205,7 @@ export const CasesOverviewPage: React.FC = () => {
           )}
           {!loading &&
             !error &&
-            filteredCases.map((c) => (
+            paginatedCases.map((c) => (
               <TR
                 key={c.id}
                 onClick={() => navigate(`/cases/${c.id}`)}
@@ -205,12 +233,43 @@ export const CasesOverviewPage: React.FC = () => {
       {/* Pagination */}
       {!loading && !error && filteredCases.length > 0 && (
         <div className="mt-8 flex items-center justify-between text-sm text-text-secondary">
-          <span>Showing 1-{filteredCases.length} of {cases.length} cases</span>
+          <span>
+            Showing {(currentPage - 1) * itemsPerPage + 1}-
+            {Math.min(currentPage * itemsPerPage, filteredCases.length)} of {filteredCases.length} cases
+          </span>
           <div className="flex items-center gap-4">
-            <button className="hover:text-text-primary disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+            <button
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="hover:text-text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
               Previous
             </button>
-            <button className="hover:text-text-primary">Next</button>
+            <div className="flex items-center gap-2">
+              {Array.from({ length: totalPages }, (_, i) => i + 1)
+                .filter(p => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1)
+                .map((p, i, arr) => (
+                  <React.Fragment key={p}>
+                    {i > 0 && p - arr[i - 1] > 1 && <span className="text-text-tertiary">...</span>}
+                    <button
+                      onClick={() => setCurrentPage(p)}
+                      className={`w-7 h-7 rounded flex items-center justify-center transition-colors ${currentPage === p
+                        ? 'bg-primary text-white font-medium'
+                        : 'hover:bg-muted-neutralBg text-text-secondary hover:text-text-primary'
+                        }`}
+                    >
+                      {p}
+                    </button>
+                  </React.Fragment>
+                ))}
+            </div>
+            <button
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className="hover:text-text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              Next
+            </button>
           </div>
         </div>
       )}

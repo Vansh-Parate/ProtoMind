@@ -96,7 +96,7 @@ export class SarGenerationUnavailableError extends Error {
 
 /**
  * OpenRouter-backed LLM provider that orchestrates:
- * - retrieval from ChromaDB
+ * - retrieval from Pinecone (vector store)
  * - SAR prompt construction via LangChain
  * - structured JSON output parsing
  * - final narrative rendering
@@ -118,14 +118,14 @@ export class LangChainLLMProvider implements LLMProvider {
 
     this.model = apiKey
       ? new ChatOpenAI({
-          apiKey,
-          modelName: this.modelName,
-          temperature: this.temperature,
-          maxRetries: 2,
-          configuration: {
-            baseURL: process.env.OPENROUTER_BASE_URL ?? 'https://openrouter.ai/api/v1'
-          }
-        })
+        apiKey,
+        modelName: this.modelName,
+        temperature: this.temperature,
+        maxRetries: 2,
+        configuration: {
+          baseURL: process.env.OPENROUTER_BASE_URL ?? 'https://openrouter.ai/api/v1'
+        }
+      })
       : null;
   }
 
@@ -147,7 +147,7 @@ export class LangChainLLMProvider implements LLMProvider {
       const triggeredRuleDescriptions =
         score.triggered_rules?.map((r) => r.description) ?? [];
 
-      // 1) Retrieve relevant knowledge from ChromaDB.
+      // 1) Retrieve relevant knowledge from Pinecone.
       const knowledge = await getRelevantKnowledgeForCase({
         alert_payload,
         score,

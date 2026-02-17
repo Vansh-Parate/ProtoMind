@@ -49,6 +49,16 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
   return (await res.json()) as T;
 }
 
+export interface PaginatedResult<T> {
+  data: T[];
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+}
+
 export function fetchCases(): Promise<SarCaseSummary[]> {
   const cached = getCachedCasesList();
   if (cached) return Promise.resolve(cached);
@@ -56,6 +66,10 @@ export function fetchCases(): Promise<SarCaseSummary[]> {
     setCachedCasesList(data);
     return data;
   });
+}
+
+export function fetchCasesPaginated(page: number, limit = 50): Promise<PaginatedResult<SarCaseSummary>> {
+  return request<PaginatedResult<SarCaseSummary>>(`/cases?page=${page}&limit=${limit}`);
 }
 
 /** Ensure API response has safe shape for rendering (avoid white screen from undefined). */

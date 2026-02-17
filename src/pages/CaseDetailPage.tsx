@@ -305,13 +305,56 @@ export const CaseDetailPage: React.FC = () => {
               Transaction Timeline
             </div>
           </div>
-          <span className="text-xs text-text-tertiary">Visualization placeholder</span>
         </div>
-        <div className="h-44 rounded-lg bg-bg-main border border-border-light flex items-center justify-center">
-          <div className="text-center">
-            <iconify-icon icon="solar:chart-square-linear" width="32" class="text-text-tertiary mb-2" />
-            <p className="text-sm text-text-tertiary">Transaction timeline visualization would appear here</p>
-          </div>
+
+        <div className="px-2">
+          {(!detail.alertPayload?.transactions || (detail.alertPayload.transactions as any[]).length === 0) ? (
+            <div className="h-24 rounded-lg bg-bg-main border border-border-light flex items-center justify-center">
+              <p className="text-sm text-text-tertiary">No transaction data available for this case.</p>
+            </div>
+          ) : (
+            <div className="relative border-l-2 border-border-light ml-2 space-y-6 my-2">
+              {((detail.alertPayload.transactions as any[]) || []).map((tx, i) => (
+                <div key={i} className="ml-6 relative">
+                  {/* Timeline Dot */}
+                  <div className="absolute -left-[31px] top-3 h-4 w-4 rounded-full border-2 border-white bg-primary shadow-sm" />
+
+                  {/* Content Card */}
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 bg-white p-4 rounded-lg border border-border-light shadow-sm hover:border-border-focus transition-colors">
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-sm font-semibold text-text-primary">
+                          {tx.merchant || tx.destination || 'External Account'}
+                        </span>
+                        <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded border ${tx.status === 'Completed' ? 'bg-green-50 text-green-700 border-green-200' :
+                            tx.status === 'Failed' ? 'bg-red-50 text-red-700 border-red-200' : 'bg-gray-50 text-gray-600 border-gray-200'
+                          }`}>
+                          {tx.status || 'Pending'}
+                        </span>
+                      </div>
+                      <div className="text-xs text-text-secondary">
+                        <span className="font-medium text-text-primary">{tx.type}</span>
+                        <span className="mx-1.5">•</span>
+                        <span>txn_id: {tx.id}</span>
+                      </div>
+                    </div>
+
+                    <div className="text-right flex flex-col items-end">
+                      <div className="text-base font-bold text-text-primary">
+                        ${Number(tx.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                      </div>
+                      <div className="flex items-center gap-1.5 text-xs text-text-tertiary mt-1">
+                        <iconify-icon icon="solar:calendar-date-linear" width="12" />
+                        <span>{tx.date}</span>
+                        <span className="mx-0.5">·</span>
+                        <span>{tx.time}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </Card>
 

@@ -31,10 +31,31 @@ function toSarCaseSummary(c: Case) {
 }
 
 function toSarCaseDetail(c: Case & { sarReports: SARReport[] }) {
+  const payload = (c.alert_payload as Record<string, any>) ?? {};
+
+  // Synthesize transactions from flat CSV fields if standard array is missing
+  if (!payload.transactions && payload.txn_amount) {
+    payload.transactions = [{
+      id: payload.txn_source_id || 'TXN-001',
+      date: payload.txn_date,
+      time: payload.txn_time,
+      amount: payload.txn_amount,
+      type: payload.txn_type,
+      status: payload.txn_status,
+      destination: payload.txn_destination_id,
+      merchant: payload.merchant_id
+    }];
+  }
+
   const whyGenerated =
     (Array.isArray(c.triggered_rules)
       ? (c.triggered_rules as any[])
       : [])?.map((r) => String(r.description ?? '')) ?? [];
+
+  // Add ML Risk Summary if available
+  if (payload.ml_risk_summary) {
+    whyGenerated.push(String(payload.ml_risk_summary));
+  }
 
   const sar = c.sarReports[0];
 
@@ -43,7 +64,8 @@ function toSarCaseDetail(c: Case & { sarReports: SARReport[] }) {
     whyGenerated,
     narrativeGenerated: sar?.generated_text ?? '',
     narrativeEdited: sar?.edited_text ?? '',
-    confidenceScore: c.confidence_score
+    confidenceScore: c.confidence_score,
+    alertPayload: payload
   };
 }
 
@@ -58,15 +80,47 @@ casesRouter.post('/', async (req, res, next) => {
   }
 });
 
-casesRouter.get('/', async (_req, res, next) => {
+casesRouter.get('/', async (req, res, next) => {
   try {
+    const pageParam = req.query.page ? Number(req.query.page) : undefined;
+    const limitParam = req.query.limit ? Number(req.query.limit) : 500; // Increased default limit
+
+    if (pageParam) {
+      // Pagination mode
+      const page = pageParam < 1 ? 1 : pageParam;
+      const limit = limitParam;
+      const skip = (page - 1) * limit;
+
+      const [total, cases] = await prisma.$transaction([
+        prisma.case.count(),
+        prisma.case.findMany({
+          orderBy: { created_at: 'desc' },
+          skip,
+          take: limit
+        })
+      ]);
+
+      const payload = cases.map(toSarCaseSummary);
+      // Construct paginated response
+      return res.json({
+        data: payload,
+        meta: {
+          total,
+          page,
+          limit,
+          totalPages: Math.ceil(total / limit)
+        }
+      });
+    }
+
+    // Default mode: return array (all/limited items) for Dashboard/Legacy
     const cached = getCachedCasesList();
     if (cached) {
       return res.json(cached);
     }
     const cases = await prisma.case.findMany({
       orderBy: { created_at: 'desc' },
-      take: 200
+      take: 1000 // Limit to avoid massive payloads, but 500 fits
     });
     const payload = cases.map(toSarCaseSummary);
     setCachedCasesList(payload);
