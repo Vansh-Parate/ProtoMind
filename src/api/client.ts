@@ -87,6 +87,7 @@ function normalizeCaseDetail(data: unknown): SarCaseDetail {
     narrativeGenerated: typeof d?.narrativeGenerated === 'string' ? d.narrativeGenerated : '',
     narrativeEdited: typeof d?.narrativeEdited === 'string' ? d.narrativeEdited : '',
     confidenceScore: typeof d?.confidenceScore === 'number' ? d.confidenceScore : undefined,
+    alertPayload: (d?.alertPayload != null && typeof d.alertPayload === 'object') ? d.alertPayload as Record<string, unknown> : undefined,
   };
 }
 
