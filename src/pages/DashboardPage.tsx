@@ -42,7 +42,10 @@ export const DashboardPage: React.FC = () => {
     totalCases > 0
       ? Math.round(cases.reduce((s, c) => s + c.score, 0) / totalCases)
       : 0;
-  const recentCases = cases.slice(0, 5);
+  const recentCases = React.useMemo(
+    () => (cases.length ? [...cases].sort(() => 0.5 - Math.random()).slice(0, 5) : []),
+    [cases]
+  );
 
   const highPct = totalCases > 0 ? Math.round((highRiskCount / totalCases) * 100) : 0;
   const medPct = totalCases > 0 ? Math.round((mediumRiskCount / totalCases) * 100) : 0;
