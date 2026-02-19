@@ -7,6 +7,7 @@ import { StatusDot } from '../components/ui/StatusDot';
 import { SarFormReport } from '../components/SarFormReport';
 import { defaultSarFormData } from '../sarForm';
 import { PdfPreviewModal } from '../components/PdfPreviewModal';
+import { TransactionTimelineChart } from '../components/TransactionTimelineChart';
 import type { SarCaseDetail, RiskLevel } from '../types';
 import { fetchCaseDetail, approveSar, rejectSar } from '../api/client';
 import { unpackEdits } from './SarEditorPage';
@@ -307,54 +308,16 @@ export const CaseDetailPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="px-2">
-          {(!detail.alertPayload?.transactions || (detail.alertPayload.transactions as any[]).length === 0) ? (
-            <div className="h-24 rounded-lg bg-bg-main border border-border-light flex items-center justify-center">
-              <p className="text-sm text-text-tertiary">No transaction data available for this case.</p>
+        <div className="px-2 space-y-4">
+          <div className="rounded-lg bg-bg-main border border-border-light p-3">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-medium text-text-secondary uppercase tracking-wider">
+                Aggregated transaction volume
+              </span>
+              <span className="text-xs text-text-tertiary">Last 12 months</span>
             </div>
-          ) : (
-            <div className="relative border-l-2 border-border-light ml-2 space-y-6 my-2">
-              {((detail.alertPayload.transactions as any[]) || []).map((tx, i) => (
-                <div key={i} className="ml-6 relative">
-                  {/* Timeline Dot */}
-                  <div className="absolute -left-[31px] top-3 h-4 w-4 rounded-full border-2 border-white bg-primary shadow-sm" />
-
-                  {/* Content Card */}
-                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 bg-white p-4 rounded-lg border border-border-light shadow-sm hover:border-border-focus transition-colors">
-                    <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-sm font-semibold text-text-primary">
-                          {tx.merchant || tx.destination || 'External Account'}
-                        </span>
-                        <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded border ${tx.status === 'Completed' ? 'bg-green-50 text-green-700 border-green-200' :
-                            tx.status === 'Failed' ? 'bg-red-50 text-red-700 border-red-200' : 'bg-gray-50 text-gray-600 border-gray-200'
-                          }`}>
-                          {tx.status || 'Pending'}
-                        </span>
-                      </div>
-                      <div className="text-xs text-text-secondary">
-                        <span className="font-medium text-text-primary">{tx.type}</span>
-                        <span className="mx-1.5">•</span>
-                        <span>txn_id: {tx.id}</span>
-                      </div>
-                    </div>
-
-                    <div className="text-right flex flex-col items-end">
-                      <div className="text-base font-bold text-text-primary">
-                        ${Number(tx.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                      </div>
-                      <div className="flex items-center gap-1.5 text-xs text-text-tertiary mt-1">
-                        <iconify-icon icon="solar:calendar-date-linear" width="12" />
-                        <span>{tx.date}</span>
-                        <span className="mx-0.5">·</span>
-                        <span>{tx.time}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+            <TransactionTimelineChart />
+          </div>
         </div>
       </Card>
 
@@ -397,7 +360,7 @@ export const CaseDetailPage: React.FC = () => {
   );
 };
 
-function CaseDetailSarForm({ detail, pdfRef }: { detail: SarCaseDetail; pdfRef: React.RefObject<HTMLDivElement | null> }) {
+function CaseDetailSarForm({ detail, pdfRef }: { detail: SarCaseDetail; pdfRef: React.RefObject<HTMLDivElement> }) {
   const unpacked = React.useMemo(() => unpackEdits(detail.narrativeEdited, detail), [detail.narrativeEdited, detail]);
   const narrative = unpacked.narrative || detail.narrativeGenerated || '';
   return (

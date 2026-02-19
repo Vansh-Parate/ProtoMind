@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card } from '../components/ui/Card';
 import { Skeleton } from '../components/ui/Skeleton';
-import { fetchCases, fetchAudit, type AuditLog } from '../api/client';
+import { fetchAllAudits, type AuditLog } from '../api/client';
 
 export const AuditTimelinePage: React.FC = () => {
   const [events, setEvents] = React.useState<AuditLog[]>([]);
@@ -11,18 +11,9 @@ export const AuditTimelinePage: React.FC = () => {
   React.useEffect(() => {
     let cancelled = false;
 
-    async function loadLatestCaseAudit() {
+    async function loadAudits() {
       try {
-        const cases = await fetchCases();
-        if (!cases.length) {
-          if (!cancelled) {
-            setEvents([]);
-          }
-          return;
-        }
-
-        const latestId = cases[0].id;
-        const data = await fetchAudit(latestId);
+        const data = await fetchAllAudits();
         if (!cancelled) {
           setEvents(data);
         }
@@ -37,7 +28,7 @@ export const AuditTimelinePage: React.FC = () => {
       }
     }
 
-    void loadLatestCaseAudit();
+    void loadAudits();
 
     return () => {
       cancelled = true;
@@ -53,7 +44,7 @@ export const AuditTimelinePage: React.FC = () => {
         </h1>
         <p className="text-sm text-text-secondary mt-2 font-normal max-w-2xl">
           Track key actions taken on SAR narratives for audit and governance. This view shows the
-          real audit trail for the most recently updated case.
+          real audit trail across all cases.
         </p>
       </div>
 
@@ -109,8 +100,10 @@ export const AuditTimelinePage: React.FC = () => {
                       </span>
                       <span>{event.actor}</span>
                       <span className="text-text-tertiary">•</span>
+                      <span className="font-medium text-text-primary">Case #{event.case_id}</span>
+                      <span className="text-text-tertiary">•</span>
                       <span className="capitalize">{event.action.toLowerCase()}</span>
-                      {index === events.length - 1 && (
+                      {index === 0 && (
                         <span className="ml-2 inline-flex items-center rounded-full bg-muted-successBg text-muted-success px-2 py-0.5 text-[11px] font-medium">
                           Latest
                         </span>

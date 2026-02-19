@@ -23,6 +23,8 @@
     "@pinecone-database/pinecone": "^7.0.0",
     "@prisma/client": "^5.18.0",
     "@radix-ui/react-select": "^2.0.0",
+    "@radix-ui/react-slot": "^1.2.4",
+    "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cors": "^2.8.5",
     "csv-parse": "^6.1.0",
@@ -31,10 +33,13 @@
     "html2canvas": "^1.4.1",
     "jspdf": "^4.1.0",
     "lucide-react": "^0.471.0",
+    "motion": "^12.34.2",
     "openai": "^4.73.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.21.3",
+    "recharts": "^3.7.0",
+    "tailwind-merge": "^3.5.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {

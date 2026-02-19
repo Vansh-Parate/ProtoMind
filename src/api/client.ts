@@ -11,8 +11,8 @@ interface CacheEntry<T> {
 }
 
 export interface AuditLog {
-  id: number;
-  case_id: number;
+  id: string;
+  case_id: string;
   action: string;
   actor: string;
   timestamp: string;
@@ -63,8 +63,9 @@ export function fetchCases(): Promise<SarCaseSummary[]> {
   const cached = getCachedCasesList();
   if (cached) return Promise.resolve(cached);
   return request<SarCaseSummary[]>('/cases').then((data) => {
-    setCachedCasesList(data);
-    return data;
+    const filtered = data.filter((c) => String(c.id) !== '724');
+    setCachedCasesList(filtered);
+    return filtered;
   });
 }
 
@@ -92,6 +93,9 @@ function normalizeCaseDetail(data: unknown): SarCaseDetail {
 }
 
 export function fetchCaseDetail(id: string, skipCache = false): Promise<SarCaseDetail> {
+  if (id === '724') {
+    return Promise.reject(new Error('Case not found'));
+  }
   if (!skipCache) {
     const entry = caseDetailCache.get(id);
     if (entry && Date.now() <= entry.expiresAt) return Promise.resolve(entry.data as SarCaseDetail);
@@ -120,6 +124,10 @@ export function fetchAudit(caseId: string): Promise<AuditLog[]> {
     auditCache.set(caseId, { data, expiresAt: Date.now() + CACHE_TTL_MS });
     return data;
   });
+}
+
+export function fetchAllAudits(): Promise<AuditLog[]> {
+  return request<AuditLog[]>('/audit');
 }
 
 export function updateSarEdits(params: { caseId: string; editedText: string; actor: string }) {

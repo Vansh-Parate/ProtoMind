@@ -4,6 +4,19 @@ import { getCachedAudit, setCachedAudit } from '../core/cache';
 
 export const auditRouter = Router();
 
+
+auditRouter.get('/', async (req, res, next) => {
+  try {
+    const logs = await prisma.auditLog.findMany({
+      orderBy: { timestamp: 'desc' },
+      take: 100
+    });
+    res.json(logs);
+  } catch (err) {
+    next(err);
+  }
+});
+
 auditRouter.get('/:caseId', async (req, res, next) => {
   try {
     const caseId = Number(req.params.caseId);
